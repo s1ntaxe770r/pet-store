@@ -1,0 +1,6 @@
+
+admin/__pycache__/
+db.sqlite3
+admin/env
+env
+admin/db.sqlite3

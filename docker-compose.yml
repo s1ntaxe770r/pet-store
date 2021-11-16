@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  rmq:
+    image: rabbitmq:3-management-alpine
+    container_name: 'rabbitmq'
+    domainname: rabbitmq.com 
+    ports:
+        - 5672:5672
+        - 15672:15672
+  pets-store:
+    build: 
+      context: .
+      dockerfile: pet-store/pets_store/Dockerfile
+    ports:
+      - "5000:8000"
+    command: bash -c " cd /pet-store/pet-store/pets_store && python manage.py runserver 0.0.0.0:8000" 
+    environment:
+      - PETS_SERVICE_URL=http://pets-api:6000/api/pets
+  pets-api:
+    build:
+      context: .
+      dockerfile: pets-api/Dockerfile
+    ports:
+      - "6000:6000"
+    environment:
+      - RMQ_HOST=amqp://rmq?connection_attempts=5&retry_delay=5
+    depends_on:
+      - rmq
+  inventory:
+    build:
+      context: .
+      dockerfile: inventory/Dockerfile
+    ports:
+      - "7000:7000"
+    environment:
+      - RMQ_HOST=amqp://rabbitmq?connection_attempts=5&retry_delay=5
+      - REDIS_URL=redis://redis:6379
+    depends_on:
+      - rmq
+      - redis
+  admin:
+    build:
+      context: .
+      dockerfile: admin-dashboard/admin/Dockerfile
+    ports:
+      - "4000:8000"
+    environment:
+      - INVENTORY_SERVICE_URL=http://inventory:7000/inventory/stats
+    command: bash -c "cd /admin/admin-dashboard/admin && python manage.py runserver 0.0.0.0:8000"
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+  
+
