@@ -51,7 +51,7 @@ def create():
      db.session.commit()
      conn = pika.BlockingConnection(parameters)
      channel  = conn.channel()
-     channel.basic_publish(exchange='fanout', routing_key='pets', body=serialize(NewPet))
+     channel.basic_publish(exchange='', routing_key='pets', body=serialize(NewPet))
      print(" [x] Sent 'pet to RabbitMQ!'")
      return jsonify(
         {

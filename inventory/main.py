@@ -15,32 +15,24 @@ rmq:str =  getenv("RMQ_HOST")
 
 app = Flask(__name__)
 client = redis.from_url(redis_url)
-
-
-def main():
-    parameters = pika.URLParameters(rmq)
-    connection = pika.SelectConnection(parameters)
-    connection.ioloop.start()
-    channel = connection.channel()
-    channel.queue_declare(queue='pets')
+parameters = pika.URLParameters(rmq)
+connection = pika.BlockingConnection(parameters)
+channel = connection.channel()
+channel.queue_declare(queue='pets')
    
-    def callback(ch, method, properties, body):
-        print(" [x] Received %r" % body)
-        data =  json.loads(body)
-        print(data)
-        pet_id = data["name"]
-        print("[*] inserted pet id"+str(pet_id)+" into redis")
-        pet_no = client.get("total_pets")
-        if pet_no == None:
+def callback(ch, method, properties, body):
+    print(" [x] Received %r" % body)
+    data =  json.loads(body)
+    print(data)
+    pet_id = data["name"]
+    print("[*] inserted pet id"+str(pet_id)+" into redis")
+    pet_no = client.get("total_pets")
+    if pet_no == None:
             client.set("total_pets",1)
-        else:
-            client.set("total_pets",int(pet_no)+1)
-     
-    channel.basic_consume(queue='pets', on_message_callback=callback, auto_ack=True)
-
-    print(' [*] Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
-
+    else:
+        client.set("total_pets",int(pet_no)+1)
+    
+channel.basic_consume(queue='pets', on_message_callback=callback, auto_ack=True)
 
 @app.get('/inventory/stats')
 def stats():
@@ -48,7 +40,7 @@ def stats():
     return jsonify(
         {"total_pets":int(total)})
 
-consumer_thread = threading.Thread(target=main)
+consumer_thread = threading.Thread(target=channel.start_consuming)
 consumer_thread.start()
 
 if __name__ == '__main__':
