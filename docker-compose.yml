@@ -35,7 +35,7 @@ services:
       - "7000:7000"
     environment:
       - RMQ_HOST=amqp://rabbitmq?connection_attempts=5&retry_delay=5
-      - REDIS_URL=redis://redis :6379
+      - REDIS_URL=redis://redis:6379
     depends_on:
       - rmq
       - redis
