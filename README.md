@@ -8,6 +8,13 @@ Pet store is composed of 4 services, two of which communicate over rabbitmq  and
 
 ![arch.png](arch.png)
 
+
+| Service    | Language/framework | description                                        |
+|------------|--------------------|----------------------------------------------------|
+| Pet-store  | python/django      | renders available pets from the api                |
+| Pet-api    | python/flask       | handles storage of pets                            |
+| Inverntory | python/flask       | handles inventroy management when pets are created |
+
 ## Setup 
 
 Running this application is as easy as `docker-compose up`
