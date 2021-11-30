@@ -28,6 +28,7 @@ def create_pet(request):
         notes  =  req.get("notes")
         category = req.get("category")
         headers = {'Content-type': 'application/json'}
+        # post message to pet service
         resp = requests.post(PETS_SERVICE,headers=headers,json={"name":name,"notes":notes,"category":category})
         resp_data = resp.json()
         if resp.status_code != 200:

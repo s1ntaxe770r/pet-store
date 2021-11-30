@@ -14,14 +14,19 @@ redis_url:str = getenv("REDIS_URL")
 rmq:str =  getenv("RMQ_HOST")
 
 app = Flask(__name__)
+
+#create redis client
 client = redis.from_url(redis_url)
 parameters = pika.URLParameters(rmq)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
 channel.exchange_declare(exchange='pets', exchange_type='fanout')
 channel.queue_declare(queue='pets')
+# consume messages using the routing pets
 channel.queue_bind(exchange='pets', queue='pets',routing_key='pets')
    
+
+# callback gets called when the consumer recieves a message 
 def callback(ch, method, properties, body):
     print(" [x] Received %r" % body)
     data =  json.loads(body)
@@ -44,6 +49,8 @@ def stats():
     return jsonify(
         {"total_pets":int(total)})
 
+
+#start the consumer on a separate thread
 consumer_thread = threading.Thread(target=channel.start_consuming)
 consumer_thread.start()
 

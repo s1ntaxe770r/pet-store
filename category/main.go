@@ -24,6 +24,8 @@ var (
 
 func main() {
 	r := gin.New()
+
+	// create redis client
 	db := redis.NewClient(&redis.Options{
 		Addr:     REDIS_HOST + ":" + REDIS_PORT,
 		Password: "",
@@ -37,6 +39,7 @@ func main() {
 	utils.FailOnError(err, "Failed to connect to RabbitMQ")
 	defer conn.Close()
 
+	// create a new channel
 	ch, err := conn.Channel()
 	utils.FailOnError(err, "Failed to open a channel")
 	defer ch.Close()
@@ -61,6 +64,7 @@ func main() {
 	)
 	utils.FailOnError(err, "Failed to declare a queue")
 
+	// bind to pet-category queue
 	err = ch.QueueBind(
 		q.Name,          // queue name
 		"pets-category", // routing key
@@ -91,14 +95,18 @@ func main() {
 		nil,        // args
 	)
 	utils.FailOnError(err, "Failed to register a consumer")
+
+	// start the http server in a goroutine
 	go func() {
 		r.Run(":3000")
 	}()
 	forever := make(chan bool)
+
 	go func() {
 		logrus.Info(" [*] Waiting for messages. To exit press CTRL+C")
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
+
 			logrus.Info(fmt.Sprintf("received message %s", string(d.Body)))
 			ctx := context.Background()
 			var pet models.Pet
@@ -106,6 +114,8 @@ func main() {
 			if err != nil {
 				logrus.Info(err)
 			}
+
+			// insert pet category in the format ["reptile","sam","alonso"]
 			err = db.LPush(ctx, pet.Category, pet.Name).Err()
 			if err != nil {
 				logrus.Fatal(err)
