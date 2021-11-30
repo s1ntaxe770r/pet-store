@@ -67,6 +67,7 @@ services:
     depends_on:
       - rmq
       - redis
+    restart: always
 
   
   
