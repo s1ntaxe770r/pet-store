@@ -11,7 +11,7 @@ import (
 func ReptileHandler(db *redis.Client) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx := context.Background()
-		val, err := db.LRange(ctx, "reptiles", 0, -1).Result()
+		val, err := db.LRange(ctx, "reptile", 0, -1).Result()
 		if err != nil {
 			logrus.Fatal(err)
 			c.String(400, "an error occured", err.Error())
