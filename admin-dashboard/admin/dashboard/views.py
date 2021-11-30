@@ -20,4 +20,4 @@ def index(request):
     print(jsn_payload)
     if data.status_code != 200:
         return "Sorry we were unable to load this page right now"
-    return render(request,"index.html",{'inventory':pet_count},{'reptiles':reptiles})
+    return render(request,"index.html",{'inventory':pet_count,'reptiles':reptiles})
