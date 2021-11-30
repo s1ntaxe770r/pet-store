@@ -32,59 +32,86 @@ func main() {
 	r.GET("/pets/categories/reptile", handlers.ReptileHandler(db))
 	r.GET("/pets/categories/dog", handlers.DogHandler(db))
 	r.GET("/pets/categories/cat", handlers.CatHandler(db))
+
+	conn, err := amqp.Dial(RMQ_HOST)
+	utils.FailOnError(err, "Failed to connect to RabbitMQ")
+	defer conn.Close()
+
+	ch, err := conn.Channel()
+	utils.FailOnError(err, "Failed to open a channel")
+	defer ch.Close()
+	err = ch.ExchangeDeclare(
+		"pets",   // name
+		"fanout", // type
+		false,    // durable
+		false,    // auto-deleted
+		false,    // internal
+		false,    // no-wait
+		nil,      // arguments
+	)
+	utils.FailOnError(err, "Failed to declare an exchange")
+
+	q, err := ch.QueueDeclare(
+		"pets", // name
+		false,  // durable
+		false,  // delete when unused
+		false,  // exclusive
+		false,  // no-wait
+		nil,    // arguments
+	)
+	utils.FailOnError(err, "Failed to declare a queue")
+
+	err = ch.QueueBind(
+		q.Name, // queue name
+		"pets", // routing key
+		"pets", // exchange
+		false,
+		nil,
+	)
+	utils.FailOnError(err, "Failed to bind a queue")
+	_ = ch.Qos(10, 0, false)
+	logrus.Info("[*] started consumer")
+	// q, err := ch.QueueDeclare(
+	// 	"pets", // name
+	// 	true,   // durable
+	// 	false,  // delete when unused
+	// 	false,  // exclusive
+	// 	false,  // no-wait
+	// 	nil,    // arguments
+	// )
+	// utils.FailOnError(err, "Failed to declare a queue")
+
+	msgs, err := ch.Consume(
+		"pets",     // queue
+		"category", // consumer
+		true,       // auto-ack
+		false,      // exclusive
+		false,      // no-local
+		false,      // no-waitx
+		nil,        // args
+	)
+	utils.FailOnError(err, "Failed to register a consumer")
 	go func() {
-		conn, err := amqp.Dial(RMQ_HOST)
-		utils.FailOnError(err, "Failed to connect to RabbitMQ")
-		defer conn.Close()
-
-		ch, err := conn.Channel()
-		utils.FailOnError(err, "Failed to open a channel")
-		defer ch.Close()
-		logrus.Info("[*] started consumer")
-		// q, err := ch.QueueDeclare(
-		// 	"pets", // name
-		// 	true,   // durable
-		// 	false,  // delete when unused
-		// 	false,  // exclusive
-		// 	false,  // no-wait
-		// 	nil,    // arguments
-		// )
-		// utils.FailOnError(err, "Failed to declare a queue")
-
-		err = ch.Qos(1, 0, false)
-		utils.FailOnError(err, "failed to configure Qos")
-
-		msgs, err := ch.Consume(
-			"pets", // queue
-			"",     // consumer
-			true,   // auto-ack
-			false,  // exclusive
-			false,  // no-local
-			false,  // no-wait
-			nil,    // args
-		)
-		utils.FailOnError(err, "Failed to register a consumer")
-
-		forever := make(chan bool)
-
+		r.Run(":3000")
+	}()
+	forever := make(chan bool)
+	go func() {
+		logrus.Info(" [*] Waiting for messages. To exit press CTRL+C")
 		for d := range msgs {
 			log.Printf("Received a message: %s", d.Body)
 			logrus.Info(fmt.Sprintf("received message %s", string(d.Body)))
 			ctx := context.Background()
-			pet := models.Pet{}
+			var pet models.Pet
 			err := json.Unmarshal(d.Body, &pet)
 			if err != nil {
 				logrus.Info(err)
 			}
 			err = db.LPush(ctx, pet.Category, 0, pet.Name).Err()
 			if err != nil {
-				log.Fatal(err)
+				logrus.Fatal(err)
 			}
-
 		}
-		log.Printf(" [*] Waiting for messages. To exit press CTRL+C")
-		<-forever
 
 	}()
-	r.Run(":3000")
+	<-forever
 }
