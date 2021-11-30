@@ -18,7 +18,9 @@ client = redis.from_url(redis_url)
 parameters = pika.URLParameters(rmq)
 connection = pika.BlockingConnection(parameters)
 channel = connection.channel()
+channel.exchange_declare(exchange='pets', exchange_type='fanout')
 channel.queue_declare(queue='pets')
+channel.queue_bind(exchange='pets', queue='pets',routing_key='pets')
    
 def callback(ch, method, properties, body):
     print(" [x] Received %r" % body)
