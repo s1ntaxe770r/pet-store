@@ -1,26 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="https://unpkg.com/blocks.css/dist/blocks.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/blocks.css/dist/blocks.min.css"
+    />
     <title>Pet store</title>
-</head>
-<body>
-
-<div class="block">
-    <h1 style="text-align: center;">Pet store</h1>
-</div>
+  </head>
+  <body>
+    <div class="block">
+      <h1 style="text-align: center">Pet store</h1>
+    </div>
     {% for pet in pets %}
     <div class="wrapper block">
-        <div class="block">
-           <h3> Name :  {{pet.name}} </h3>
-            <h3> ID: {{pet.pet_id}}</h3>
-            <h3> Notes: {{pet.notes}}</h3>
-        </div>
+      <div class="block">
+        <h3>Name : {{pet.name}}</h3>
+        <h3>ID: {{pet.pet_id}}</h3>
+        <h3>Notes: {{pet.notes}}</h3>
+      </div>
     </div>
     {% endfor %}
-
-</body>
+  </body>
 </html>

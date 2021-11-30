@@ -37,6 +37,8 @@ channel.basic_consume(queue='pets', on_message_callback=callback, auto_ack=True)
 @app.get('/inventory/stats')
 def stats():
     total = client.get("total_pets")
+    if total == None:
+        return jsonify({"total_pets":0})
     return jsonify(
         {"total_pets":int(total)})
 

@@ -11,7 +11,6 @@ from pika import connection
 
 
 
-
 app =  Flask(__name__)
 db = SQLAlchemy(app)
 @dataclass  
@@ -20,9 +19,12 @@ class Pet(db.Model):
     pet_id: int
     name: str
     notes: str
+    category: str
     pet_id = db.Column(db.Integer, primary_key = True)
     name = db.Column(db.String(100), nullable = False)
     notes = db.Column(db.String(50), nullable = False )
+    category = db.Column(db.String(50), nullable = False )
+
 
 RMQ_HOST = os.getenv('RMQ_HOST')
 app.config["SQLALCHEMY_DATABASE_URI"] = 'sqlite:///pets.db'
@@ -39,18 +41,22 @@ def serialize(message:Pet):
             'id': message.pet_id,
             'name': message.name,
             'notes': message.notes,
+            'category': message.category,
         })
+        
 
 @app.post("/api/pets")
 def create():
      data = request.json
      name =  data["name"]
      notes = data["notes"]
-     NewPet = Pet(name=name,notes=notes)
+     category = data["category"]
+     NewPet = Pet(name=name,notes=notes,category=category)
      db.session.add(NewPet)
      db.session.commit()
      conn = pika.BlockingConnection(parameters)
      channel  = conn.channel()
+     channel.queue_declare("pets",durable=False)
      channel.basic_publish(exchange='', routing_key='pets', body=serialize(NewPet))
      print(" [x] Sent 'pet to RabbitMQ!'")
      return jsonify(
@@ -58,6 +64,7 @@ def create():
             'id': NewPet.pet_id,
             'name': NewPet.name,
             'notes': NewPet.notes,
+            'category': NewPet.category,
         }   
     )
 
