@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ../docker-compose.yml
+    kompose.version: 1.26.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: admin
+  name: admin
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: admin
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f ../docker-compose.yml
+        kompose.version: 1.26.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: admin
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - cd /admin/admin-dashboard/admin && python manage.py runserver 0.0.0.0:8000
+          env:
+            - name: CATEGORY_SERVICE_URL
+              value: http://category:3000
+            - name: INVENTORY_SERVICE_URL
+              value: http://inventory:7000/inventory/stats
+          image: admin
+          name: admin
+          ports:
+            - containerPort: 8000
+          resources: {}
+      restartPolicy: Always
+status: {}

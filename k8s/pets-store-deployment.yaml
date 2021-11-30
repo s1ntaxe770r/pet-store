@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ../docker-compose.yml
+    kompose.version: 1.26.0 (HEAD)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: pets-store
+  name: pets-store
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: pets-store
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f ../docker-compose.yml
+        kompose.version: 1.26.0 (HEAD)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: pets-store
+    spec:
+      containers:
+        - args:
+            - bash
+            - -c
+            - ' cd /pet-store/pet-store/pets_store && python manage.py runserver 0.0.0.0:8000'
+          env:
+            - name: PETS_SERVICE_URL
+              value: http://pets-api:6000/api/pets
+          image: pets-store
+          name: pets-store
+          ports:
+            - containerPort: 8000
+          resources: {}
+      restartPolicy: Always
+status: {}
