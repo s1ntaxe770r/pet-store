@@ -106,7 +106,7 @@ func main() {
 			if err != nil {
 				logrus.Info(err)
 			}
-			err = db.LPush(ctx, pet.Category, 0, pet.Name).Err()
+			err = db.LPush(ctx, pet.Category, pet.Name).Err()
 			if err != nil {
 				logrus.Fatal(err)
 			}
