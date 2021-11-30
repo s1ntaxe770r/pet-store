@@ -59,6 +59,7 @@ def create():
      channel.exchange_declare("pets",exchange_type='fanout')
      channel.queue_declare("pets",durable=False)
      channel.basic_publish(exchange='pets', routing_key='pets', body=serialize(NewPet))
+     channel.basic_publish(exchange='pets', routing_key='pets-category', body=serialize(NewPet))
      print(" [x] Sent 'pet to RabbitMQ!'")
      return jsonify(
         {

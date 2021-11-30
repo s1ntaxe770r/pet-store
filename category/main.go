@@ -62,9 +62,9 @@ func main() {
 	utils.FailOnError(err, "Failed to declare a queue")
 
 	err = ch.QueueBind(
-		q.Name, // queue name
-		"pets", // routing key
-		"pets", // exchange
+		q.Name,          // queue name
+		"pets-category", // routing key
+		"pets",          // exchange
 		false,
 		nil,
 	)
