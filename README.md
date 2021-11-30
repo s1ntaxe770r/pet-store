@@ -17,7 +17,9 @@ Pet store is composed of 4 services, two of which communicate over rabbitmq  and
 
 ## Setup 
 
-Running this application is as easy as `docker-compose up`
+Running this application is as easy as `docker-compose up` 
+
+Note! The category service might fail if rabbitmq hasn't started up , so make sure to run `docker-compose up category` when rabbitmq has fully started
 
 Next create a few pets in the api by running the following curl commands 
 
