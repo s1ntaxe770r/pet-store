@@ -47,11 +47,27 @@ services:
       - "4000:8000"
     environment:
       - INVENTORY_SERVICE_URL=http://inventory:7000/inventory/stats
+      - CATEGORY_SERVICE_URL=http://category:3000
     command: bash -c "cd /admin/admin-dashboard/admin && python manage.py runserver 0.0.0.0:8000"
   redis:
     image: redis:alpine
     container_name: redis
     ports:
       - "6379:6379"
+  category:
+    build: 
+      context: .
+      dockerfile: category/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - RMQ_HOST=amqp://rmq?connection_attempts=5&retry_delay=5
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      - rmq
+      - redis
+
+  
   
 
